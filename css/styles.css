@@ -1,0 +1,111 @@
+/* Custom Design System & CSS Enhancements for QuizMaster Pro */
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.7);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.8);
+}
+
+/* Glassmorphism & UI Accents */
+.nav-tab {
+  color: #94a3b8;
+}
+.nav-tab:hover {
+  color: #f8fafc;
+  background-color: rgba(51, 65, 85, 0.4);
+}
+.nav-tab.active {
+  color: #ffffff;
+  background-color: #6366f1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+/* Option Card Styling */
+.option-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.option-card:hover {
+  transform: translateY(-1px);
+}
+.option-card.selected {
+  background-color: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+.option-card.correct-answer {
+  background-color: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+}
+.option-card.wrong-answer {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+}
+
+/* Review Filter Buttons */
+.review-filter-btn {
+  color: #94a3b8;
+}
+.review-filter-btn.active {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+/* Highlight Red Correct Text in Parsed HTML */
+.text-red-correct {
+  color: #f87171 !important;
+  font-weight: 700 !important;
+  text-decoration: underline;
+}
+
+/* Pulse Animation for Timer Alert */
+@keyframes timeWarningPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 12px 4px rgba(239, 68, 68, 0.6);
+  }
+}
+.time-warning {
+  animation: timeWarningPulse 1.2s infinite ease-in-out;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+/* Print CSS Styles for Exporting Exam Results */
+@media print {
+  header, nav, #quickSampleBtn, #soundToggleBtn, #filterReviewAll, #filterReviewWrong, #filterReviewCorrect, #filterReviewFlagged, #reTestBtn, #exportPdfBtn {
+    display: none !important;
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  .bg-slate-800, .bg-slate-900, .bg-slate-950 {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+  h1, h2, h3, h4, p, span {
+    color: #0f172a !important;
+  }
+  .text-red-correct, .text-emerald-400, .text-emerald-300 {
+    color: #15803d !important;
+    font-weight: bold;
+  }
+  .text-rose-400, .text-rose-300 {
+    color: #b91c1c !important;
+  }
+}
