@@ -771,12 +771,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     poolSummaryText.textContent = `Tổng ngân hàng hiện có: ${count} câu hỏi từ ${activeFiles.length}/${engine.questionBank.length} file được chọn`;
 
-    // Populate Topic File Select Dropdown with Learning Progress Status
+    // Populate Topic File Select Dropdown with Learning Progress Status & Remaining Count
     cfgTopicFile.innerHTML = `<option value="all">Tất Cả các file được chọn (${count} câu)</option>` + 
       activeFiles.map(f => {
         const prog = engine.getTopicProgress(f.id);
-        const statusText = prog.isCompleted ? ' ✅ Đã học xong (100%)' : prog.percent > 0 ? ` 📖 Đang học (${prog.percent}%)` : ' ⚪ Chưa học';
-        return `<option value="${f.id}">${f.topic} (${f.questions.length} câu)${statusText}</option>`;
+        const remaining = prog.totalCount - prog.answeredCount;
+        const statusText = prog.isCompleted 
+          ? ' ✅ Đã học xong 100%' 
+          : prog.percent > 0 
+            ? ` 📖 Đang học (${prog.percent}% • Còn ${remaining} câu)` 
+            : ` ⚪ Chưa học (${f.questions.length} câu)`;
+        return `<option value="${f.id}">${f.topic}${statusText}</option>`;
       }).join("");
 
     updateTopicQuestionBadge();
@@ -784,13 +789,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateTopicQuestionBadge() {
     const selectedId = cfgTopicFile.value;
+    const skipAnswered = document.getElementById("cfgSkipAnswered")?.checked !== false;
+
     if (selectedId === 'all') {
       const count = engine.getTotalAvailableQuestions();
-      topicQuestionCountBadge.textContent = `Tổng số câu hỏi trong chuyên đề: ${count} câu (Giữ nguyên 100% câu hỏi trong tất cả file gốc)`;
+      const unanswered = engine.getUnansweredQuestionsCount('all');
+      topicQuestionCountBadge.textContent = skipAnswered 
+        ? `Tự động chọn: ${unanswered} câu CHƯA HỌC (Đã loại bỏ ${count - unanswered} câu đã làm trước đó)`
+        : `Tổng số câu hỏi: ${count} câu (Tất cả file gốc)`;
     } else {
       const file = engine.questionBank.find(f => f.id === selectedId);
-      const count = file ? file.questions.length : 0;
-      topicQuestionCountBadge.textContent = `Tổng số câu hỏi trong chuyên đề: ${count} câu (Giữ nguyên 100% câu hỏi trong file ${file ? file.fileName : ''})`;
+      if (file) {
+        const prog = engine.getTopicProgress(file.id);
+        const remaining = prog.totalCount - prog.answeredCount;
+        topicQuestionCountBadge.textContent = skipAnswered
+          ? `Chuyên đề: ${remaining} câu CHƯA HỌC (Đã hoàn thành ${prog.answeredCount}/${prog.totalCount} câu)`
+          : `Chuyên đề: ${file.questions.length} câu hỏi (Tất cả câu trong file gốc)`;
+      }
     }
   }
 
@@ -807,6 +822,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   cfgTopicFile.addEventListener("change", updateTopicQuestionBadge);
+  const cfgSkipAnsweredInput = document.getElementById("cfgSkipAnswered");
+  if (cfgSkipAnsweredInput) cfgSkipAnsweredInput.addEventListener("change", updateTopicQuestionBadge);
 
   startExamBtn.addEventListener("click", () => {
     const selectionType = cfgSelectionType.value;
@@ -815,7 +832,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const duration = parseInt(cfgTimeLimit.value, 10);
     const mode = cfgExamMode.value;
     const keepOrder = cfgKeepOrder.checked;
-    const shuffleOpts = false;
+    const skipAnswered = document.getElementById("cfgSkipAnswered")?.checked !== false;
 
     try {
       playSound('click');
@@ -826,7 +843,8 @@ document.addEventListener("DOMContentLoaded", () => {
         shuffleOptions: false,
         selectionType: selectionType,
         selectedFileId: selectedFileId,
-        keepOrder: keepOrder
+        keepOrder: keepOrder,
+        skipAnswered: skipAnswered
       });
       
       // Hide config panel & show test interface

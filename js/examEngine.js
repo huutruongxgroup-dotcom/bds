@@ -315,12 +315,34 @@ class ExamEngine {
       .reduce((sum, f) => sum + f.questions.length, 0);
   }
 
+  getUnansweredQuestionsCount(selectedFileId = 'all') {
+    const progressMap = this.getTopicProgressMap();
+    let activeFiles = this.questionBank.filter(f => f.enabled);
+    if (selectedFileId !== 'all') {
+      activeFiles = this.questionBank.filter(f => f.id === selectedFileId);
+    }
+
+    let unansweredCount = 0;
+    activeFiles.forEach(file => {
+      const fileProgress = progressMap[file.id] || {};
+      file.questions.forEach((q, idx) => {
+        const qKey = q.id || `q_${idx}_${(q.question || '').slice(0, 20)}`;
+        if (fileProgress[qKey] !== true) {
+          unansweredCount++;
+        }
+      });
+    });
+
+    return unansweredCount;
+  }
+
   // --- EXAM GENERATOR ---
   /**
-   * Generate exam set (supports Random 100 or Topic Practice Mode keeping all original questions)
+   * Generate exam set (supports Random 100 or Topic Practice Mode, with Smart Skip of Already Answered Questions)
    */
-  generateExam({ targetCount = 100, durationMinutes = 60, mode = 'exam', shuffleOptions = false, selectionType = 'random100', selectedFileId = 'all', keepOrder = false }) {
+  generateExam({ targetCount = 100, durationMinutes = 60, mode = 'exam', shuffleOptions = false, selectionType = 'random100', selectedFileId = 'all', keepOrder = false, skipAnswered = true }) {
     let pool = [];
+    const progressMap = this.getTopicProgressMap();
 
     let activeFiles = this.questionBank.filter(f => f.enabled);
     if (selectionType === 'topic' && selectedFileId !== 'all') {
@@ -328,16 +350,29 @@ class ExamEngine {
     }
 
     activeFiles.forEach(file => {
-      file.questions.forEach(q => {
-        pool.push({
-          ...q,
-          sourceFile: file.fileName
-        });
+      const fileProgress = progressMap[file.id] || {};
+      file.questions.forEach((q, idx) => {
+        const qKey = q.id || `q_${idx}_${(q.question || '').slice(0, 20)}`;
+        const isAlreadyAnswered = fileProgress[qKey] === true;
+
+        if (!skipAnswered || !isAlreadyAnswered) {
+          pool.push({
+            ...q,
+            fileId: file.id,
+            sourceFile: file.fileName,
+            qIndex: idx,
+            isAlreadyAnswered
+          });
+        }
       });
     });
 
     if (pool.length === 0) {
-      throw new Error("Không tìm thấy câu hỏi nào trong chuyên đề được chọn. Hãy chọn một chuyên đề có câu hỏi!");
+      if (skipAnswered) {
+        throw new Error("🎉 CHÚC MỪNG! Bạn đã trả lời hoàn tất 100% các câu trong chuyên đề được chọn!\n\nNếu muốn ôn lại toàn bộ, hãy bỏ tích chọn ô 'Bỏ qua các câu đã làm' hoặc bấm nút 'Học lại' ở trang Chuyên Đề.");
+      } else {
+        throw new Error("Không tìm thấy câu hỏi nào trong chuyên đề được chọn. Hãy chọn một chuyên đề có câu hỏi!");
+      }
     }
 
     let selectedQuestions = [];
