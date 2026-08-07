@@ -657,28 +657,64 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // File Preview Modal
+  // File Preview Modal with Interactive 1-Click Answer Editing
   function openFilePreviewModal(fileId) {
     const file = engine.questionBank.find(f => f.id === fileId);
     if (!file) return;
 
-    previewModalTitle.textContent = file.fileName;
-    previewModalSub.textContent = `Tổng cộng ${file.questions.length} câu hỏi • Chữ màu đỏ là đáp án đúng`;
+    previewModalTitle.textContent = `${file.topic} (${file.fileName})`;
+    previewModalSub.textContent = `Tổng cộng ${file.questions.length} câu hỏi • Bấm vào đáp án bất kỳ bên dưới để đổi đáp án đúng`;
 
-    previewModalBody.innerHTML = file.questions.map((q, idx) => `
-      <div class="p-4 bg-slate-900 border border-slate-700/80 rounded-xl space-y-2">
-        <p class="font-bold text-slate-200">Câu ${idx + 1}: ${q.question}</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-slate-300">
-          ${q.options.map((opt, oIdx) => `
-            <div class="p-2 rounded-lg border ${oIdx === q.correctAnswer ? 'border-rose-500/60 bg-rose-950/20 text-rose-300 font-bold underline' : 'border-slate-800 bg-slate-950/50'}">
-              <span class="font-bold uppercase mr-1">${String.fromCharCode(65 + oIdx)}.</span>
-              <span>${opt}</span>
-              ${oIdx === q.correctAnswer ? ' <span class="text-rose-400 font-bold ml-1">(ĐÚNG - ĐÃ TÔ ĐỎ)</span>' : ''}
-            </div>
-          `).join("")}
-        </div>
+    previewModalBody.innerHTML = `
+      <div class="p-3 bg-indigo-950/40 border border-indigo-500/40 rounded-xl text-xs text-indigo-300 font-medium flex items-center space-x-2 mb-3">
+        <i data-lucide="edit-3" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+        <span>💡 Bạn có thể bấm trực tiếp vào bất kỳ đáp án A, B, C, D nào bên dưới để chọn/thay đổi đáp án đúng chuẩn cho câu đó!</span>
       </div>
-    `).join("");
+
+      <div class="space-y-3">
+        ${file.questions.map((q, idx) => `
+          <div class="p-4 bg-slate-900 border border-slate-700/80 rounded-xl space-y-2.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-extrabold text-indigo-400">Câu #${idx + 1}</span>
+              <span class="text-[10px] text-slate-500 font-semibold">${q.explanation || 'Đáp án xác thực'}</span>
+            </div>
+            <p class="font-bold text-slate-200 text-xs leading-relaxed">${q.question}</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              ${q.options.map((opt, oIdx) => {
+                const isCorrect = oIdx === q.correctAnswer;
+                return `
+                  <button data-preview-fileid="${file.id}" data-preview-qidx="${idx}" data-preview-optidx="${oIdx}" class="btn-change-preview-ans p-2.5 rounded-xl border text-left text-xs transition-all flex items-start justify-between cursor-pointer ${isCorrect ? 'border-rose-500 bg-rose-950/40 text-rose-200 font-bold ring-1 ring-rose-500 shadow-md' : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 text-slate-400'}">
+                    <span><strong class="font-bold uppercase mr-1">${String.fromCharCode(65 + oIdx)}.</strong> ${opt}</span>
+                    ${isCorrect ? '<span class="text-rose-400 font-extrabold text-[10px] shrink-0 ml-1">✓ ĐÁP ÁN ĐÚNG</span>' : '<span class="text-slate-600 text-[10px] shrink-0 ml-1 hover:text-slate-300">Chọn câu này</span>'}
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    if (window.lucide) window.lucide.createIcons();
+
+    // 1-Click answer picker handlers inside preview modal
+    document.querySelectorAll(".btn-change-preview-ans").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const fId = e.currentTarget.dataset.previewFileid;
+        const qIdx = parseInt(e.currentTarget.dataset.previewQidx, 10);
+        const optIdx = parseInt(e.currentTarget.dataset.previewOptidx, 10);
+
+        engine.updateQuestion(fId, qIdx, {
+          correctAnswer: optIdx,
+          explanation: "Đáp án đã được cập nhật trực tiếp trên bảng xem chi tiết file."
+        });
+        playSound('select');
+        openFilePreviewModal(fId);
+        renderBankFiles();
+        if (typeof renderSettingsPanel === 'function') renderSettingsPanel();
+      });
+    });
 
     previewModal.classList.remove("hidden");
   }
