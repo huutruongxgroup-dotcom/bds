@@ -431,45 +431,88 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // TOPIC CARDS with Lock & Delete support
-    fileListContainer.innerHTML = files.map(file => `
-      <div class="topic-card bg-slate-900/90 border ${file.enabled ? 'border-indigo-500/50 shadow-indigo-500/10 shadow-lg' : 'border-slate-800 opacity-60'} rounded-xl p-4 space-y-3 transition-all hover:border-indigo-400/60 relative group">
-        <div class="flex items-start justify-between gap-2">
-          <label class="flex items-start space-x-3 cursor-pointer min-w-0 flex-1">
-            <input type="checkbox" data-fileid="${file.id}" class="file-toggle-cb mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-800 border-slate-700 cursor-pointer flex-shrink-0" ${file.enabled ? 'checked' : ''} />
-            <div class="min-w-0">
-              <div class="flex items-center space-x-1.5 flex-wrap">
-                <p class="font-bold text-sm ${file.enabled ? 'text-white' : 'text-slate-400'}">${file.topic}</p>
+    // TOPIC CARDS with Lock, Delete, and Learning Progress Tracker
+    fileListContainer.innerHTML = files.map(file => {
+      const prog = engine.getTopicProgress(file.id);
+      return `
+        <div class="topic-card bg-slate-900/90 border ${file.enabled ? 'border-indigo-500/50 shadow-indigo-500/10 shadow-lg' : 'border-slate-800 opacity-60'} rounded-xl p-4 space-y-3 transition-all hover:border-indigo-400/60 relative group">
+          <div class="flex items-start justify-between gap-2">
+            <label class="flex items-start space-x-3 cursor-pointer min-w-0 flex-1">
+              <input type="checkbox" data-fileid="${file.id}" class="file-toggle-cb mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-800 border-slate-700 cursor-pointer flex-shrink-0" ${file.enabled ? 'checked' : ''} />
+              <div class="min-w-0">
+                <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                  <p class="font-bold text-sm ${file.enabled ? 'text-white' : 'text-slate-400'}">${file.topic}</p>
+                  ${prog.isCompleted ? `
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center gap-1">
+                      <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-400"></i> Đã học xong (100%)
+                    </span>
+                  ` : prog.percent > 0 ? `
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center gap-1">
+                      <i data-lucide="book-open" class="w-3 h-3 text-indigo-400"></i> Đang học (${prog.percent}%)
+                    </span>
+                  ` : `
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400">Chưa học (0%)</span>
+                  `}
+                </div>
+                <p class="text-xs text-slate-500 truncate mt-0.5" title="${file.fileName}">${file.fileName}</p>
               </div>
-              <p class="text-xs text-slate-500 truncate mt-0.5" title="${file.fileName}">${file.fileName}</p>
-            </div>
-          </label>
-          <button data-fileid="${file.id}" class="btn-toggle-lock p-1.5 rounded-lg border transition-all ${file.locked !== false ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30' : 'bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30'}" title="${file.locked !== false ? 'Đã khóa nội dung (Bấm để mở khóa)' : 'Chưa khóa (Bấm để khóa)'}">
-            <i data-lucide="${file.locked !== false ? 'lock' : 'unlock'}" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
-          <span class="font-bold ${file.enabled ? 'text-indigo-400' : 'text-slate-600'} flex items-center space-x-1">
-            <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
-            <span>${file.questions.length} câu hỏi</span>
-          </span>
-          <div class="flex items-center space-x-2">
-            ${file.locked === false ? `
-              <button data-fileid="${file.id}" class="btn-delete-file text-rose-400 hover:text-rose-300 font-semibold text-xs p-1 transition-colors" title="Xóa file">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
-            ` : `
-              <span class="text-[10px] text-indigo-300/70 font-semibold px-1.5 py-0.5 bg-indigo-500/10 rounded" title="Nội dung đã khóa">🔒 Đã khóa</span>
-            `}
-            <button data-fileid="${file.id}" class="btn-preview-file text-slate-400 hover:text-indigo-300 font-semibold underline text-xs">
-              Xem chi tiết
+            </label>
+            <button data-fileid="${file.id}" class="btn-toggle-lock p-1.5 rounded-lg border transition-all ${file.locked !== false ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30' : 'bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30'}" title="${file.locked !== false ? 'Đã khóa nội dung (Bấm để mở khóa)' : 'Chưa khóa (Bấm để khóa)'}">
+              <i data-lucide="${file.locked !== false ? 'lock' : 'unlock'}" class="w-3.5 h-3.5"></i>
             </button>
           </div>
+
+          <!-- Learning Progress Bar -->
+          <div class="space-y-1 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+            <div class="flex items-center justify-between text-[11px] font-semibold">
+              <span class="text-slate-400 flex items-center gap-1">
+                <i data-lucide="bar-chart-2" class="w-3 h-3 text-indigo-400"></i> Tiến độ học:
+              </span>
+              <span class="${prog.isCompleted ? 'text-emerald-400 font-bold' : 'text-indigo-300'}">${prog.answeredCount}/${prog.totalCount} câu (${prog.percent}%)</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div class="h-full ${prog.isCompleted ? 'bg-emerald-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500'}" style="width: ${prog.percent}%"></div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-xs">
+            <span class="font-bold ${file.enabled ? 'text-indigo-400' : 'text-slate-600'} flex items-center space-x-1">
+              <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+              <span>${file.questions.length} câu hỏi</span>
+            </span>
+            <div class="flex items-center space-x-2">
+              <button data-fileid="${file.id}" class="btn-toggle-complete text-emerald-400 hover:text-emerald-300 font-semibold text-[11px] hover:underline" title="Đánh dấu đã học xong chuyên đề này">
+                ${prog.isCompleted ? 'Học lại' : 'Đánh dấu đã xong'}
+              </button>
+              ${file.locked === false ? `
+                <button data-fileid="${file.id}" class="btn-delete-file text-rose-400 hover:text-rose-300 font-semibold text-xs p-1 transition-colors" title="Xóa file">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              ` : `
+                <span class="text-[10px] text-indigo-300/70 font-semibold px-1.5 py-0.5 bg-indigo-500/10 rounded" title="Nội dung đã khóa">🔒 Đã khóa</span>
+              `}
+              <button data-fileid="${file.id}" class="btn-preview-file text-slate-400 hover:text-indigo-300 font-semibold underline text-xs">
+                Xem chi tiết
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
 
     if (window.lucide) window.lucide.createIcons();
+
+    // Toggle Completed Button Listeners
+    document.querySelectorAll(".btn-toggle-complete").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const fileId = e.currentTarget.dataset.fileid;
+        const prog = engine.getTopicProgress(fileId);
+        engine.setTopicCompletedStatus(fileId, !prog.isCompleted);
+        renderBankFiles();
+        if (typeof renderSettingsPanel === 'function') renderSettingsPanel();
+        playSound('success');
+      });
+    });
 
     // Checkbox toggles
     document.querySelectorAll(".file-toggle-cb").forEach(cb => {
@@ -728,9 +771,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     poolSummaryText.textContent = `Tổng ngân hàng hiện có: ${count} câu hỏi từ ${activeFiles.length}/${engine.questionBank.length} file được chọn`;
 
-    // Populate Topic File Select Dropdown
+    // Populate Topic File Select Dropdown with Learning Progress Status
     cfgTopicFile.innerHTML = `<option value="all">Tất Cả các file được chọn (${count} câu)</option>` + 
-      activeFiles.map(f => `<option value="${f.id}">${f.fileName} - ${f.topic} (${f.questions.length} câu)</option>`).join("");
+      activeFiles.map(f => {
+        const prog = engine.getTopicProgress(f.id);
+        const statusText = prog.isCompleted ? ' ✅ Đã học xong (100%)' : prog.percent > 0 ? ` 📖 Đang học (${prog.percent}%)` : ' ⚪ Chưa học';
+        return `<option value="${f.id}">${f.topic} (${f.questions.length} câu)${statusText}</option>`;
+      }).join("");
 
     updateTopicQuestionBadge();
   }
@@ -874,7 +921,11 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", (e) => {
         const optIdx = parseInt(e.currentTarget.dataset.optidx, 10);
         playSound('select');
-        engine.setAnswer(index, optIdx);
+        const progResult = engine.setAnswer(index, optIdx);
+        if (progResult && progResult.justCompleted) {
+          playSound('success');
+          alert(`🎉 CHÚC MỪNG! Bạn đã trả lời hoàn tất và HỌC XONG 100% Chuyên Đề này!`);
+        }
         renderActiveQuestion(index);
         renderGridPalette();
       });

@@ -65,6 +65,72 @@ class ExamEngine {
     return null;
   }
 
+  // --- TOPIC LEARNING PROGRESS TRACKER ---
+  getTopicProgressMap() {
+    try {
+      const saved = localStorage.getItem('quizmaster_topic_progress');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  saveTopicProgressMap(map) {
+    try {
+      localStorage.setItem('quizmaster_topic_progress', JSON.stringify(map));
+    } catch (e) {}
+  }
+
+  getTopicProgress(fileId) {
+    const file = this.questionBank.find(f => f.id === fileId);
+    if (!file || !file.questions || file.questions.length === 0) {
+      return { answeredCount: 0, totalCount: 0, percent: 0, isCompleted: false };
+    }
+
+    const map = this.getTopicProgressMap();
+    const fileProgress = map[fileId] || {};
+    const answeredCount = Object.keys(fileProgress).length;
+    const totalCount = file.questions.length;
+    const percent = Math.min(100, Math.round((answeredCount / totalCount) * 100));
+    const isCompleted = percent >= 100 || answeredCount >= totalCount;
+
+    return { answeredCount, totalCount, percent, isCompleted };
+  }
+
+  recordQuestionAnswered(fileId, questionKey) {
+    if (!fileId || !questionKey) return null;
+    const map = this.getTopicProgressMap();
+    if (!map[fileId]) map[fileId] = {};
+    
+    const wasAlreadyAnswered = map[fileId][questionKey] === true;
+    map[fileId][questionKey] = true;
+    this.saveTopicProgressMap(map);
+
+    const progress = this.getTopicProgress(fileId);
+    return { ...progress, justCompleted: !wasAlreadyAnswered && progress.isCompleted };
+  }
+
+  setTopicCompletedStatus(fileId, markCompleted = true) {
+    const file = this.questionBank.find(f => f.id === fileId);
+    if (!file) return;
+
+    const map = this.getTopicProgressMap();
+    if (markCompleted) {
+      map[fileId] = {};
+      file.questions.forEach((q, idx) => {
+        const qKey = q.id || `q_${idx}_${(q.question || '').slice(0, 20)}`;
+        map[fileId][qKey] = true;
+      });
+    } else {
+      delete map[fileId];
+    }
+    this.saveTopicProgressMap(map);
+  }
+
+  resetAllTopicProgress() {
+    localStorage.removeItem('quizmaster_topic_progress');
+  }
+
   saveHistoryToStorage() {
     try {
       localStorage.setItem('quizmaster_history', JSON.stringify(this.examHistory));
@@ -340,8 +406,18 @@ class ExamEngine {
 
   // --- ACTIVE EXAM INTERACTIONS ---
   setAnswer(questionIndex, optionIndex) {
-    if (!this.activeExam || this.activeExam.finished) return;
+    if (!this.activeExam || this.activeExam.finished) return null;
     this.activeExam.userAnswers[questionIndex] = optionIndex;
+
+    const q = this.activeExam.questions[questionIndex];
+    if (q) {
+      const file = this.questionBank.find(f => f.id === q.fileId || f.fileName === q.sourceFile || f.topic === q.sourceFile);
+      if (file) {
+        const qKey = q.id || `q_${q.qIndex !== undefined ? q.qIndex : questionIndex}_${(q.question || '').slice(0, 20)}`;
+        return this.recordQuestionAnswered(file.id, qKey);
+      }
+    }
+    return null;
   }
 
   toggleFlag(questionIndex) {
