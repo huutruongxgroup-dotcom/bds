@@ -771,17 +771,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     poolSummaryText.textContent = `Tổng ngân hàng hiện có: ${count} câu hỏi từ ${activeFiles.length}/${engine.questionBank.length} file được chọn`;
 
-    // Populate Topic File Select Dropdown with Learning Progress Status & Remaining Count
+    // Populate Topic File Select Dropdown with Learning Progress Status
     cfgTopicFile.innerHTML = `<option value="all">Tất Cả các file được chọn (${count} câu)</option>` + 
       activeFiles.map(f => {
         const prog = engine.getTopicProgress(f.id);
-        const remaining = prog.totalCount - prog.answeredCount;
-        const statusText = prog.isCompleted 
-          ? ' ✅ Đã học xong 100%' 
-          : prog.percent > 0 
-            ? ` 📖 Đang học (${prog.percent}% • Còn ${remaining} câu)` 
-            : ` ⚪ Chưa học (${f.questions.length} câu)`;
-        return `<option value="${f.id}">${f.topic}${statusText}</option>`;
+        const statusText = prog.isCompleted ? ' ✅ Đã học xong (100%)' : prog.percent > 0 ? ` 📖 Đang học (${prog.percent}%)` : ' ⚪ Chưa học';
+        return `<option value="${f.id}">${f.topic} (${f.questions.length} câu)${statusText}</option>`;
       }).join("");
 
     updateTopicQuestionBadge();
@@ -789,23 +784,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateTopicQuestionBadge() {
     const selectedId = cfgTopicFile.value;
-    const skipAnswered = document.getElementById("cfgSkipAnswered")?.checked !== false;
-
     if (selectedId === 'all') {
       const count = engine.getTotalAvailableQuestions();
-      const unanswered = engine.getUnansweredQuestionsCount('all');
-      topicQuestionCountBadge.textContent = skipAnswered 
-        ? `Tự động chọn: ${unanswered} câu CHƯA HỌC (Đã loại bỏ ${count - unanswered} câu đã làm trước đó)`
-        : `Tổng số câu hỏi: ${count} câu (Tất cả file gốc)`;
+      topicQuestionCountBadge.textContent = `Tổng số câu hỏi trong chuyên đề: ${count} câu (Giữ nguyên 100% câu hỏi trong tất cả file gốc)`;
     } else {
       const file = engine.questionBank.find(f => f.id === selectedId);
-      if (file) {
-        const prog = engine.getTopicProgress(file.id);
-        const remaining = prog.totalCount - prog.answeredCount;
-        topicQuestionCountBadge.textContent = skipAnswered
-          ? `Chuyên đề: ${remaining} câu CHƯA HỌC (Đã hoàn thành ${prog.answeredCount}/${prog.totalCount} câu)`
-          : `Chuyên đề: ${file.questions.length} câu hỏi (Tất cả câu trong file gốc)`;
-      }
+      const count = file ? file.questions.length : 0;
+      topicQuestionCountBadge.textContent = `Tổng số câu hỏi trong chuyên đề: ${count} câu (Giữ nguyên 100% câu hỏi trong file ${file ? file.fileName : ''})`;
     }
   }
 
@@ -822,8 +807,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   cfgTopicFile.addEventListener("change", updateTopicQuestionBadge);
-  const cfgSkipAnsweredInput = document.getElementById("cfgSkipAnswered");
-  if (cfgSkipAnsweredInput) cfgSkipAnsweredInput.addEventListener("change", updateTopicQuestionBadge);
 
   startExamBtn.addEventListener("click", () => {
     const selectionType = cfgSelectionType.value;
@@ -832,7 +815,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const duration = parseInt(cfgTimeLimit.value, 10);
     const mode = cfgExamMode.value;
     const keepOrder = cfgKeepOrder.checked;
-    const skipAnswered = document.getElementById("cfgSkipAnswered")?.checked !== false;
+    const shuffleOpts = false;
 
     try {
       playSound('click');
@@ -843,8 +826,7 @@ document.addEventListener("DOMContentLoaded", () => {
         shuffleOptions: false,
         selectionType: selectionType,
         selectedFileId: selectedFileId,
-        keepOrder: keepOrder,
-        skipAnswered: skipAnswered
+        keepOrder: keepOrder
       });
       
       // Hide config panel & show test interface
@@ -1289,79 +1271,62 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (filter === 'correct') items = items.filter(i => i.isCorrect);
     else if (filter === 'flagged') items = items.filter(i => i.isFlagged);
 
-    reviewQuestionsContainer.innerHTML = items.map((item) => {
-      const isWrong = !item.isCorrect && !item.isUnanswered;
-      return `
-        <div class="p-5 rounded-2xl border ${item.isCorrect ? 'border-emerald-500/40 bg-emerald-950/10' : (item.isUnanswered ? 'border-amber-500/40 bg-amber-950/10' : 'border-2 border-rose-500 bg-rose-950/20 ring-1 ring-rose-500/40 shadow-xl shadow-rose-950/40')} space-y-4">
-          <div class="flex items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
-            <div class="flex items-center space-x-2">
-              <span class="px-2.5 py-1 ${item.isCorrect ? 'bg-emerald-600' : (item.isUnanswered ? 'bg-amber-600' : 'bg-rose-600')} text-white text-xs font-extrabold rounded-lg">
-                Câu #${item.questionIndex + 1}
-              </span>
-              <span class="text-xs text-slate-400 font-medium">${item.sourceFile}</span>
-            </div>
-
-            <div class="flex items-center space-x-2">
-              ${item.isFlagged ? '<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs font-bold rounded">Đã đánh dấu</span>' : ''}
-              <span class="px-3 py-1 ${item.isCorrect ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300' : (item.isUnanswered ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300' : 'bg-rose-600 text-white font-extrabold shadow-md')} text-xs rounded-full">
-                ${item.isCorrect ? '✓ ĐÚNG (+1đ)' : (item.isUnanswered ? 'BỎ TRỐNG (0đ)' : '🔴 BẠN ĐÃ TRẢ LỜI SAI (0đ)')}
-              </span>
-            </div>
+    reviewQuestionsContainer.innerHTML = items.map((item) => `
+      <div class="p-5 rounded-2xl border ${item.isCorrect ? 'border-emerald-500/30 bg-emerald-950/10' : (item.isUnanswered ? 'border-amber-500/30 bg-amber-950/10' : 'border-rose-500/30 bg-rose-950/10')} space-y-4">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-1 ${item.isCorrect ? 'bg-emerald-600' : (item.isUnanswered ? 'bg-amber-600' : 'bg-rose-600')} text-white text-xs font-extrabold rounded-lg">
+              Câu #${item.questionIndex + 1}
+            </span>
+            <span class="text-xs text-slate-400 font-medium">${item.sourceFile}</span>
           </div>
 
-          ${isWrong ? `
-            <div class="px-3 py-2 bg-rose-950/80 border border-rose-500/60 rounded-xl text-rose-200 text-xs font-bold flex items-center justify-between flex-wrap gap-2 shadow">
-              <span class="flex items-center gap-1.5 text-rose-300">
-                <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i>
-                <span>CÂU NÀY LÀM SAI: Lựa chọn của bạn là [${String.fromCharCode(65 + item.userAnswer)}]</span>
-              </span>
-              <span class="text-emerald-400 font-extrabold flex items-center gap-1">
-                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i> Đáp án đúng là: [${String.fromCharCode(65 + item.correctAnswer)}]
-              </span>
-            </div>
-          ` : ''}
-
-          <h4 class="font-bold text-base text-white leading-relaxed">${item.question}</h4>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            ${item.options.map((opt, oIdx) => {
-              const isTrueCorrect = oIdx === item.correctAnswer;
-              const isUserChoice = oIdx === item.userAnswer;
-
-              let cardStyle = "border-slate-800 bg-slate-950/60 text-slate-400";
-              let badgeText = "";
-
-              if (isTrueCorrect) {
-                cardStyle = "option-correct border-emerald-500 bg-emerald-950/80 text-emerald-100 font-extrabold ring-2 ring-emerald-500 shadow-md";
-                badgeText = `<span class="px-2 py-0.5 bg-emerald-600 text-white font-extrabold rounded text-[10px] shrink-0 ml-auto">✓ ĐÁP ÁN ĐÚNG CHUẨN</span>`;
-              } else if (isUserChoice && !isTrueCorrect) {
-                cardStyle = "option-wrong border-rose-500 bg-rose-950/90 text-rose-100 font-extrabold ring-2 ring-rose-500 shadow-md";
-                badgeText = `<span class="px-2 py-0.5 bg-rose-600 text-white font-extrabold rounded text-[10px] shrink-0 ml-auto">❌ BẠN ĐÃ CHỌN SAI</span>`;
-              }
-
-              return `
-                <div class="p-3.5 rounded-xl border ${cardStyle} flex items-start justify-between space-x-3 text-xs transition-all">
-                  <div class="flex items-start space-x-2.5 flex-1">
-                    <span class="w-6 h-6 rounded-lg ${isTrueCorrect ? 'bg-emerald-600 text-white font-extrabold' : (isUserChoice ? 'bg-rose-600 text-white font-extrabold' : 'bg-slate-800 text-slate-400')} flex items-center justify-center shrink-0 text-xs">
-                      ${String.fromCharCode(65 + oIdx)}
-                    </span>
-                    <span class="leading-relaxed pt-0.5">${opt}</span>
-                  </div>
-                  ${badgeText}
-                </div>
-              `;
-            }).join("")}
-          </div>
-
-          <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700/60 text-xs text-slate-300">
-            <p class="font-bold text-indigo-300 flex items-center space-x-1">
-              <i data-lucide="info" class="w-4 h-4 mr-1"></i>
-              <span>Giải thích chi tiết:</span>
-            </p>
-            <p class="mt-0.5">${item.explanation}</p>
+          <div class="flex items-center space-x-2">
+            ${item.isFlagged ? '<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs font-bold rounded">Đã đánh dấu</span>' : ''}
+            <span class="px-3 py-1 ${item.isCorrect ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'} font-bold text-xs rounded-full">
+              ${item.isCorrect ? 'ĐÚNG (+1đ)' : (item.isUnanswered ? 'BỎ TRỐNG (0đ)' : 'SAI (0đ)')}
+            </span>
           </div>
         </div>
-    }).join("");
+
+        <h4 class="font-bold text-base text-white leading-relaxed">${item.question}</h4>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          ${item.options.map((opt, oIdx) => {
+            const isTrueCorrect = oIdx === item.correctAnswer;
+            const isUserChoice = oIdx === item.userAnswer;
+
+            let cardStyle = "border-slate-700 bg-slate-900/60 text-slate-300";
+            if (isTrueCorrect) {
+              cardStyle = "border-emerald-500 bg-emerald-950/40 text-emerald-200 font-bold ring-2 ring-emerald-500/40";
+            } else if (isUserChoice && !isTrueCorrect) {
+              cardStyle = "border-rose-500 bg-rose-950/40 text-rose-200 font-bold line-through";
+            }
+
+            return `
+              <div class="p-3.5 rounded-xl border ${cardStyle} flex items-start space-x-3 text-xs">
+                <span class="w-6 h-6 rounded-lg ${isTrueCorrect ? 'bg-emerald-500 text-white font-extrabold' : (isUserChoice ? 'bg-rose-500 text-white font-extrabold' : 'bg-slate-800 text-slate-400')} flex items-center justify-center shrink-0">
+                  ${String.fromCharCode(65 + oIdx)}
+                </span>
+                <div class="flex-1">
+                  <span>${opt}</span>
+                  ${isTrueCorrect ? ' <strong class="text-emerald-400 ml-1">(ĐÁP ÁN ĐÚNG NGUYÊN BẢN TÔ ĐỎ)</strong>' : ''}
+                  ${isUserChoice && !isTrueCorrect ? ' <strong class="text-rose-400 ml-1">(BẠN ĐÃ CHỌN SAI)</strong>' : ''}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+
+        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700/60 text-xs text-slate-300">
+          <p class="font-bold text-indigo-300 flex items-center space-x-1">
+            <i data-lucide="info" class="w-4 h-4 mr-1"></i>
+            <span>Giải thích chi tiết:</span>
+          </p>
+          <p class="mt-0.5">${item.explanation}</p>
+        </div>
+      </div>
+    `).join("");
 
     if (window.lucide) window.lucide.createIcons();
   }

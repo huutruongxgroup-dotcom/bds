@@ -1,7 +1,7 @@
 ﻿/**
  * sampleData.js - Dữ Liệu 19 File Đề Thi Bất Động Sản Gốc do Người Dùng Tải Lên
  */
-var SAMPLE_FILES_DATA = [
+const SAMPLE_FILES_DATA = [
     {
         "fileName":  "CĐ1 Luật KD BĐS.docx",
         "topic":  "CĐ1 Luật KD BĐS",
