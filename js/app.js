@@ -815,7 +815,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const duration = parseInt(cfgTimeLimit.value, 10);
     const mode = cfgExamMode.value;
     const keepOrder = cfgKeepOrder.checked;
-    const shuffleOpts = cfgShuffleOptions.checked;
+    const shuffleOpts = false;
 
     try {
       playSound('click');
@@ -823,7 +823,7 @@ document.addEventListener("DOMContentLoaded", () => {
         targetCount: targetQCount,
         durationMinutes: duration,
         mode: mode,
-        shuffleOptions: shuffleOpts,
+        shuffleOptions: false,
         selectionType: selectionType,
         selectedFileId: selectedFileId,
         keepOrder: keepOrder

@@ -319,7 +319,7 @@ class ExamEngine {
   /**
    * Generate exam set (supports Random 100 or Topic Practice Mode keeping all original questions)
    */
-  generateExam({ targetCount = 100, durationMinutes = 60, mode = 'exam', shuffleOptions = true, selectionType = 'random100', selectedFileId = 'all', keepOrder = false }) {
+  generateExam({ targetCount = 100, durationMinutes = 60, mode = 'exam', shuffleOptions = false, selectionType = 'random100', selectedFileId = 'all', keepOrder = false }) {
     let pool = [];
 
     let activeFiles = this.questionBank.filter(f => f.enabled);
