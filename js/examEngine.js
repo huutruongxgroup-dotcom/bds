@@ -17,10 +17,12 @@ class ExamEngine {
       const savedBank = localStorage.getItem('quizmaster_bank');
       const masterBank = localStorage.getItem('quizmaster_master_bank');
 
-      if (savedBank) {
-        this.questionBank = JSON.parse(savedBank);
-      } else if (masterBank) {
-        this.questionBank = JSON.parse(masterBank);
+      let parsedBank = null;
+      if (savedBank) parsedBank = JSON.parse(savedBank);
+      else if (masterBank) parsedBank = JSON.parse(masterBank);
+
+      if (parsedBank && Array.isArray(parsedBank) && parsedBank.length > 0) {
+        this.questionBank = parsedBank;
       } else if (typeof SAMPLE_FILES_DATA !== 'undefined' && SAMPLE_FILES_DATA.length > 0) {
         this.loadSampleFiles();
       }
@@ -31,6 +33,9 @@ class ExamEngine {
       }
     } catch (e) {
       console.warn("Storage load error:", e);
+      if (typeof SAMPLE_FILES_DATA !== 'undefined' && SAMPLE_FILES_DATA.length > 0) {
+        this.loadSampleFiles();
+      }
     }
   }
 

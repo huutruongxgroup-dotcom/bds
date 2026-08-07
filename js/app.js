@@ -1421,9 +1421,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- AUTO INITIALIZE: Preserve uploaded 20 files as permanent baseline data ---
+  // --- AUTO INITIALIZE: Always ensure 20 files master database is loaded ---
   if (engine.questionBank.length === 0) {
-    engine.loadFromStorage();
+    engine.loadSampleFiles();
   }
   renderBankFiles();
   switchView('exam');
