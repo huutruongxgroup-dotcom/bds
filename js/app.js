@@ -841,6 +841,117 @@ document.addEventListener("DOMContentLoaded", () => {
     answeredCountBadge.textContent = engine.getAnsweredCount();
   }
 
+  // --- LIVE EDIT QUESTION & ANSWER IN EXAM MODE ---
+  const btnLiveEditAnswer = document.getElementById("btnLiveEditAnswer");
+  const liveEditBox = document.getElementById("liveEditBox");
+  const closeLiveEditBtn = document.getElementById("closeLiveEditBtn");
+  const cancelLiveEditBtn = document.getElementById("cancelLiveEditBtn");
+  const saveLiveEditBtn = document.getElementById("saveLiveEditBtn");
+  const liveEditQuestionText = document.getElementById("liveEditQuestionText");
+  const liveEditAnswerPickers = document.getElementById("liveEditAnswerPickers");
+  const liveEditOptionsInputs = document.getElementById("liveEditOptionsInputs");
+  const liveEditStatusMsg = document.getElementById("liveEditStatusMsg");
+
+  let tempSelectedCorrectIndex = -1;
+
+  if (btnLiveEditAnswer) {
+    btnLiveEditAnswer.addEventListener("click", () => {
+      const exam = engine.activeExam;
+      if (!exam) return;
+      const q = exam.questions[exam.currentIndex];
+      if (!q) return;
+
+      tempSelectedCorrectIndex = q.correctAnswer !== undefined ? q.correctAnswer : 0;
+      liveEditQuestionText.value = q.question;
+
+      renderLiveEditOptions(q);
+      liveEditStatusMsg.classList.add("hidden");
+      liveEditBox.classList.remove("hidden");
+      if (window.lucide) window.lucide.createIcons();
+    });
+  }
+
+  function renderLiveEditOptions(q) {
+    if (!liveEditAnswerPickers || !liveEditOptionsInputs) return;
+
+    // 1-click correct answer pickers
+    liveEditAnswerPickers.innerHTML = [0, 1, 2, 3].map(i => {
+      const char = String.fromCharCode(65 + i);
+      const isSelected = tempSelectedCorrectIndex === i;
+      return `
+        <button type="button" data-live-pick="${i}" class="btn-live-pick-ans py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${isSelected ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 ring-2 ring-emerald-500/50' : 'bg-slate-950 border-slate-700 text-slate-400 hover:text-white'}">
+          <span>Đáp án ${char} ${isSelected ? '✓' : ''}</span>
+        </button>
+      `;
+    }).join("");
+
+    // Text inputs for option A, B, C, D
+    liveEditOptionsInputs.innerHTML = [0, 1, 2, 3].map(i => {
+      const char = String.fromCharCode(65 + i);
+      const val = q.options[i] || "";
+      return `
+        <div class="flex items-center space-x-2 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5">
+          <span class="font-extrabold text-indigo-400 text-xs shrink-0">${char}.</span>
+          <input type="text" data-live-opt-idx="${i}" value="${val.replace(/"/g, '&quot;')}" placeholder="Nhập nội dung đáp án ${char}" class="live-opt-input w-full bg-transparent text-white font-medium focus:outline-none text-xs" />
+        </div>
+      `;
+    }).join("");
+
+    // Picker click handlers
+    document.querySelectorAll(".btn-live-pick-ans").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        tempSelectedCorrectIndex = parseInt(e.currentTarget.dataset.livePick, 10);
+        renderLiveEditOptions(q);
+      });
+    });
+  }
+
+  if (closeLiveEditBtn) closeLiveEditBtn.addEventListener("click", () => liveEditBox.classList.add("hidden"));
+  if (cancelLiveEditBtn) cancelLiveEditBtn.addEventListener("click", () => liveEditBox.classList.add("hidden"));
+
+  if (saveLiveEditBtn) {
+    saveLiveEditBtn.addEventListener("click", () => {
+      const exam = engine.activeExam;
+      if (!exam) return;
+      const q = exam.questions[exam.currentIndex];
+      if (!q) return;
+
+      const newTitle = liveEditQuestionText.value.trim() || q.question;
+      const newOptions = [];
+      document.querySelectorAll(".live-opt-input").forEach(inp => {
+        const idx = parseInt(inp.dataset.liveOptIdx, 10);
+        newOptions[idx] = inp.value.trim() || `Đáp án ${String.fromCharCode(65 + idx)}`;
+      });
+
+      // Update question in active exam pool
+      q.question = newTitle;
+      q.options = newOptions;
+      q.correctAnswer = tempSelectedCorrectIndex;
+      q.explanation = "Đáp án đã được cập nhật trực tiếp trong khi làm bài.";
+
+      // Also update in questionBank file!
+      const targetFile = engine.questionBank.find(f => f.fileName === q.sourceFile || f.topic === q.sourceFile);
+      if (targetFile) {
+        const fileQ = targetFile.questions.find(fq => fq.id === q.id || fq.question === q.question);
+        if (fileQ) {
+          fileQ.question = newTitle;
+          fileQ.options = newOptions;
+          fileQ.correctAnswer = tempSelectedCorrectIndex;
+          fileQ.explanation = q.explanation;
+        }
+      }
+      engine.saveBankToStorage();
+
+      playSound('success');
+      liveEditStatusMsg.classList.remove("hidden");
+      setTimeout(() => {
+        liveEditBox.classList.add("hidden");
+        renderActiveQuestion(exam.currentIndex);
+        renderGridPalette();
+      }, 700);
+    });
+  }
+
   // Question Navigation
   prevQBtn.addEventListener("click", () => {
     if (engine.activeExam && engine.activeExam.currentIndex > 0) {
