@@ -1,7 +1,8 @@
 ﻿Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-$files = Get-ChildItem "C:\Users\ADMIN\Downloads\bds\*.docx" | Sort-Object Name
-Write-Output "Found $($files.Count) docx files in Downloads\bds"
+$tempDir = "C:\Users\ADMIN\.gemini\antigravity-ide\scratch\quiz-app\temp_docx"
+$files = Get-ChildItem (Join-Path $tempDir "*.docx") | Sort-Object Name
+Write-Output "Found $($files.Count) temp docx files"
 
 $resultFiles = @()
 
@@ -65,7 +66,6 @@ foreach ($fileItem in $files) {
         $text = $pObj.text
         $hasRed = $pObj.hasRed
 
-        # Option regex A., B., C., D.
         if ($text -match "^\s*[\(\[]?\s*([A-E|a-e])\s*[\.\:\)\/\-\–]\s*(.+)") {
             $char = $Matches[1].ToUpper()
             $content = $Matches[2].Trim()
@@ -131,9 +131,11 @@ foreach ($fileItem in $files) {
 }
 
 $json = $resultFiles | ConvertTo-Json -Depth 10
-$jsContent = "/**`n * sampleData.js - Dữ Liệu 19 File Đề Thi Bất Động Sản Gốc do Người Dùng Tải Lên`n */`nconst SAMPLE_FILES_DATA = $json;`n"
+$jsContent = "/**`n * sampleData.js - Dữ Liệu 19 File Đề Thi Bất Động Sản Gốc do Người Dùng Tải Lên`n */`nvar SAMPLE_FILES_DATA = $json;`n"
 
 [System.IO.File]::WriteAllText("C:\Users\ADMIN\.gemini\antigravity-ide\scratch\quiz-app\js\sampleData.js", $jsContent, [System.Text.Encoding]::UTF8)
-[System.IO.File]::WriteAllText("C:\Users\ADMIN\.gemini\antigravity-ide\scratch\quiz-app\js\questionsData.js", $jsContent, [System.Text.Encoding]::UTF8)
 
-Write-Output "Successfully parsed and saved $($resultFiles.Count) files into sampleData.js and questionsData.js!"
+$qJsContent = "/**`n * questionsData.js - Master Data Provider`n */`nif (typeof SAMPLE_FILES_DATA === 'undefined') {`n  var SAMPLE_FILES_DATA = $json;`n}`n"
+[System.IO.File]::WriteAllText("C:\Users\ADMIN\.gemini\antigravity-ide\scratch\quiz-app\js\questionsData.js", $qJsContent, [System.Text.Encoding]::UTF8)
+
+Write-Output "Successfully parsed ALL $($resultFiles.Count) files into sampleData.js and questionsData.js!"

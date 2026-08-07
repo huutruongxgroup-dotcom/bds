@@ -27,6 +27,10 @@ class ExamEngine {
         this.loadSampleFiles();
       }
 
+      if (this.questionBank.length === 0 && typeof SAMPLE_FILES_DATA !== 'undefined' && SAMPLE_FILES_DATA.length > 0) {
+        this.loadSampleFiles();
+      }
+
       const savedHistory = localStorage.getItem('quizmaster_history');
       if (savedHistory) {
         this.examHistory = JSON.parse(savedHistory);
