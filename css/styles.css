@@ -30,17 +30,40 @@
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
-/* Option Card Styling */
+/* Mobile Bottom Navigation Bar Styles */
+.mobile-nav-btn {
+  color: #94a3b8;
+  transition: all 0.15s ease-in-out;
+}
+.mobile-nav-btn:active {
+  transform: scale(0.92);
+}
+.mobile-nav-btn.active {
+  color: #818cf8;
+  background-color: rgba(99, 102, 241, 0.15);
+}
+.mobile-nav-btn.active i {
+  color: #6366f1;
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6));
+}
+
+/* Option Card Styling & Mobile Touch Optimization */
 .option-card {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 52px;
 }
 .option-card:hover {
   transform: translateY(-1px);
 }
+.option-card:active {
+  transform: scale(0.98);
+  border-color: #818cf8 !important;
+}
 .option-card.selected {
-  background-color: rgba(99, 102, 241, 0.15);
-  border-color: #6366f1;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+  background-color: rgba(99, 102, 241, 0.18) !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25);
 }
 .option-card.correct-answer {
   background-color: rgba(16, 185, 129, 0.15);
@@ -84,9 +107,37 @@
   color: #f87171 !important;
 }
 
+/* Mobile Responsive Typography & Layout Enhancements */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  h3 {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Make buttons easy to tap with thumb */
+  button, input[type="button"], select {
+    min-height: 44px;
+  }
+  
+  /* Modal responsiveness on mobile screens */
+  #auditModal > div, #previewModal > div, #submitConfirmModal > div {
+    max-height: 92vh !important;
+    margin: 8px !important;
+    border-radius: 1rem !important;
+  }
+}
+
 /* Print CSS Styles for Exporting Exam Results */
 @media print {
-  header, nav, #quickSampleBtn, #soundToggleBtn, #filterReviewAll, #filterReviewWrong, #filterReviewCorrect, #filterReviewFlagged, #reTestBtn, #exportPdfBtn {
+  header, nav, #quickSampleBtn, #soundToggleBtn, #filterReviewAll, #filterReviewWrong, #filterReviewCorrect, #filterReviewFlagged, #reTestBtn, #exportPdfBtn, nav.md\:hidden {
     display: none !important;
   }
   body {

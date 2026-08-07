@@ -170,41 +170,63 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyTableBody = document.getElementById("historyTableBody");
   const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 
+  // Mobile Nav Elements
+  const mobileTabBankBtn = document.getElementById("mobileTabBankBtn");
+  const mobileTabExamBtn = document.getElementById("mobileTabExamBtn");
+  const mobileTabResultBtn = document.getElementById("mobileTabResultBtn");
+  const mobileTabHistoryBtn = document.getElementById("mobileTabHistoryBtn");
+  const mobileTabSettingsBtn = document.getElementById("mobileTabSettingsBtn");
+
   // --- NAVIGATION VIEW SWITCHER ---
   function switchView(targetView) {
     [viewBank, viewExam, viewResult, viewHistory, viewSettings].forEach(v => v && v.classList.add("hidden"));
     [tabBankBtn, tabExamBtn, tabResultBtn, tabHistoryBtn, tabSettingsBtn].forEach(b => b && b.classList.remove("active"));
+    [mobileTabBankBtn, mobileTabExamBtn, mobileTabResultBtn, mobileTabHistoryBtn, mobileTabSettingsBtn].forEach(b => b && b.classList.remove("active"));
 
     if (targetView === 'bank') {
       viewBank.classList.remove("hidden");
-      tabBankBtn.classList.add("active");
+      if (tabBankBtn) tabBankBtn.classList.add("active");
+      if (mobileTabBankBtn) mobileTabBankBtn.classList.add("active");
       renderBankFiles();
     } else if (targetView === 'exam') {
       viewExam.classList.remove("hidden");
-      tabExamBtn.classList.add("active");
+      if (tabExamBtn) tabExamBtn.classList.add("active");
+      if (mobileTabExamBtn) mobileTabExamBtn.classList.add("active");
       updateExamConfigSummary();
     } else if (targetView === 'result') {
       viewResult.classList.remove("hidden");
-      tabResultBtn.classList.add("active");
+      if (tabResultBtn) tabResultBtn.classList.add("active");
+      if (mobileTabResultBtn) mobileTabResultBtn.classList.add("active");
       renderExamResultView();
     } else if (targetView === 'history') {
       viewHistory.classList.remove("hidden");
-      tabHistoryBtn.classList.add("active");
+      if (tabHistoryBtn) tabHistoryBtn.classList.add("active");
+      if (mobileTabHistoryBtn) mobileTabHistoryBtn.classList.add("active");
       renderHistoryTable();
     } else if (targetView === 'settings') {
       viewSettings.classList.remove("hidden");
-      tabSettingsBtn.classList.add("active");
+      if (tabSettingsBtn) tabSettingsBtn.classList.add("active");
+      if (mobileTabSettingsBtn) mobileTabSettingsBtn.classList.add("active");
       renderSettingsPanel();
     }
 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (window.lucide) window.lucide.createIcons();
   }
 
+  // Desktop & Mobile tab listeners
   tabBankBtn.addEventListener("click", () => switchView('bank'));
   tabExamBtn.addEventListener("click", () => switchView('exam'));
   tabResultBtn.addEventListener("click", () => switchView('result'));
   tabHistoryBtn.addEventListener("click", () => switchView('history'));
   tabSettingsBtn.addEventListener("click", () => switchView('settings'));
+
+  if (mobileTabBankBtn) mobileTabBankBtn.addEventListener("click", () => switchView('bank'));
+  if (mobileTabExamBtn) mobileTabExamBtn.addEventListener("click", () => switchView('exam'));
+  if (mobileTabResultBtn) mobileTabResultBtn.addEventListener("click", () => switchView('result'));
+  if (mobileTabHistoryBtn) mobileTabHistoryBtn.addEventListener("click", () => switchView('history'));
+  if (mobileTabSettingsBtn) mobileTabSettingsBtn.addEventListener("click", () => switchView('settings'));
+
   document.getElementById("navBrand").addEventListener("click", () => switchView('bank'));
   if (goToExamNavBtn) goToExamNavBtn.addEventListener("click", () => switchView('exam'));
 

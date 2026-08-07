@@ -109,7 +109,7 @@
   </header>
 
   <!-- Main View Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-8">
 
     <!-- VIEW 1: CHUYÊN ĐỀ (20 Fixed Topics) -->
     <section id="viewBank" class="hidden space-y-6">
@@ -881,6 +881,30 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobile Bottom Sticky Navigation Bar -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 px-2 py-1.5 flex items-center justify-around shadow-2xl">
+    <button id="mobileTabBankBtn" class="mobile-nav-btn flex flex-col items-center justify-center space-y-0.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+      <i data-lucide="layout-list" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Chuyên Đề</span>
+    </button>
+    <button id="mobileTabExamBtn" class="mobile-nav-btn active flex flex-col items-center justify-center space-y-0.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+      <i data-lucide="play-circle" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Vào Thi</span>
+    </button>
+    <button id="mobileTabResultBtn" class="mobile-nav-btn flex flex-col items-center justify-center space-y-0.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+      <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Kết Quả</span>
+    </button>
+    <button id="mobileTabHistoryBtn" class="mobile-nav-btn flex flex-col items-center justify-center space-y-0.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+      <i data-lucide="history" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Lịch Sử</span>
+    </button>
+    <button id="mobileTabSettingsBtn" class="mobile-nav-btn flex flex-col items-center justify-center space-y-0.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+      <i data-lucide="settings" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Cài Đặt</span>
+    </button>
+  </nav>
 
   <!-- JavaScript Application Modules -->
   <script src="js/questionsData.js"></script>
