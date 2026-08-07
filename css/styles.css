@@ -107,31 +107,61 @@
   color: #f87171 !important;
 }
 
+/* Mobile Touch & High-Contrast Visual Feedback */
+.option-card.option-correct {
+  background-color: rgba(6, 78, 59, 0.85) !important;
+  border-color: #10b981 !important;
+  color: #ecfdf5 !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.option-card.option-wrong {
+  background-color: rgba(136, 19, 55, 0.85) !important;
+  border-color: #f43f5e !important;
+  color: #fff1f2 !important;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.3);
+}
+
 /* Mobile Responsive Typography & Layout Enhancements */
 @media (max-width: 640px) {
   body {
     font-size: 14px;
   }
   h1 {
-    font-size: 1.5rem !important;
+    font-size: 1.4rem !important;
   }
   h2 {
-    font-size: 1.25rem !important;
+    font-size: 1.2rem !important;
   }
   h3 {
-    font-size: 1.1rem !important;
+    font-size: 1.05rem !important;
   }
   
-  /* Make buttons easy to tap with thumb */
+  /* Make buttons easy to tap with thumb on smartphones */
   button, input[type="button"], select {
-    min-height: 44px;
+    min-height: 46px;
   }
   
   /* Modal responsiveness on mobile screens */
   #auditModal > div, #previewModal > div, #submitConfirmModal > div {
     max-height: 92vh !important;
-    margin: 8px !important;
+    margin: 6px !important;
     border-radius: 1rem !important;
+  }
+}
+
+/* Mobile Sticky Exam Controls Bar */
+@media (max-width: 768px) {
+  .mobile-exam-nav-bar {
+    position: sticky;
+    bottom: 56px;
+    z-index: 30;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(51, 65, 85, 0.8);
+    padding: 10px 12px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+    border-radius: 1rem 1rem 0 0;
   }
 }
 

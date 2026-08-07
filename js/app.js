@@ -903,15 +903,46 @@ document.addEventListener("DOMContentLoaded", () => {
     // User selected choice
     const selectedChoice = exam.userAnswers[index];
 
-    // Options A, B, C, D
+    // Options A, B, C, D with Vibrant Red (Wrong) & Green (Correct) visual feedback
     optionsContainer.innerHTML = q.options.map((opt, oIdx) => {
       const isSelected = selectedChoice === oIdx;
+      const isCorrect = oIdx === q.correctAnswer;
+      const hasAnswered = selectedChoice !== -1;
+
+      let cardStyle = "border-slate-700 bg-slate-900/80 hover:border-slate-600";
+      let badgeHtml = "";
+
+      if (hasAnswered) {
+        if (isSelected && !isCorrect) {
+          // WRONG ANSWER PICKED -> VIBRANT RED
+          cardStyle = "option-wrong border-rose-500 bg-rose-950/80 text-rose-100 ring-2 ring-rose-500 shadow-lg shadow-rose-950/50";
+          badgeHtml = `
+            <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-extrabold text-xs shrink-0 ml-auto flex items-center gap-1 shadow">
+              <i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Sai rồi!
+            </span>
+          `;
+        } else if (isCorrect) {
+          // TRUE CORRECT ANSWER -> VIBRANT GREEN
+          cardStyle = "option-correct border-emerald-500 bg-emerald-950/80 text-emerald-100 ring-2 ring-emerald-500 shadow-lg shadow-emerald-950/50";
+          badgeHtml = `
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-extrabold text-xs shrink-0 ml-auto flex items-center gap-1 shadow">
+              <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Đáp án đúng!
+            </span>
+          `;
+        } else {
+          cardStyle = "border-slate-800 bg-slate-950/40 text-slate-500 opacity-60";
+        }
+      }
+
       return `
-        <button data-optidx="${oIdx}" class="option-card w-full text-left p-4 rounded-xl border ${isSelected ? 'selected border-indigo-500 bg-indigo-950/30' : 'border-slate-700 bg-slate-900/80 hover:border-slate-600'} flex items-start space-x-3 cursor-pointer group">
-          <span class="w-7 h-7 rounded-lg ${isSelected ? 'bg-indigo-600 text-white font-extrabold' : 'bg-slate-800 text-slate-300 group-hover:bg-slate-700'} flex items-center justify-center text-xs shrink-0 transition-colors">
-            ${String.fromCharCode(65 + oIdx)}
-          </span>
-          <span class="text-sm font-semibold text-slate-200 leading-relaxed pt-0.5">${opt}</span>
+        <button data-optidx="${oIdx}" class="option-card w-full text-left p-4 rounded-xl border ${cardStyle} flex items-center justify-between space-x-3 cursor-pointer group transition-all">
+          <div class="flex items-start space-x-3">
+            <span class="w-7 h-7 rounded-lg ${isSelected ? (isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white') : (isCorrect && hasAnswered ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300')} flex items-center justify-center text-xs font-extrabold shrink-0 transition-colors">
+              ${String.fromCharCode(65 + oIdx)}
+            </span>
+            <span class="text-sm sm:text-base font-semibold leading-relaxed pt-0.5">${opt}</span>
+          </div>
+          ${badgeHtml}
         </button>
       `;
     }).join("");
@@ -920,7 +951,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".option-card").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const optIdx = parseInt(e.currentTarget.dataset.optidx, 10);
-        playSound('select');
+        if (optIdx === q.correctAnswer) {
+          playSound('success');
+        } else {
+          playSound('warning');
+        }
         const progResult = engine.setAnswer(index, optIdx);
         if (progResult && progResult.justCompleted) {
           playSound('success');
